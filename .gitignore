@@ -1,0 +1,15 @@
+node_modules
+.next
+out
+.env
+.env.local
+.DS_Store
+*.log
+public/sw.js
+public/workbox-*.js
+public/sw.js.map
+public/workbox-*.js.map
+coverage
+.vercel
+.turbo
+tsconfig.tsbuildinfo
