@@ -5,31 +5,11 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [googleLoading, setGoogleLoading] = useState(false);
-
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setStatus("sending");
-    setError(null);
-    try {
-      const sb = createClient();
-      const { error } = await sb.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: `${location.origin}/auth/callback` },
-      });
-      if (error) throw error;
-      setStatus("sent");
-    } catch (e) {
-      setStatus("error");
-      setError((e as Error).message);
-    }
-  }
 
   async function signInWithGoogle() {
-    setGoogleLoading(true);
+    setLoading(true);
     setError(null);
     try {
       const sb = createClient();
@@ -40,7 +20,7 @@ export default function LoginPage() {
       if (error) throw error;
       // Browser redirects to Google — no further state changes here.
     } catch (e) {
-      setGoogleLoading(false);
+      setLoading(false);
       setError((e as Error).message);
     }
   }
@@ -52,50 +32,19 @@ export default function LoginPage() {
           <div className="text-5xl">🧠</div>
           <h1 className="text-2xl font-extrabold">Welcome back</h1>
           <p className="text-duo-gray text-sm">
-            Sign in with Google, or get a magic link by email.
+            Sign in with Google to start learning.
           </p>
         </div>
 
         <button
           type="button"
           onClick={signInWithGoogle}
-          disabled={googleLoading}
+          disabled={loading}
           className="w-full inline-flex items-center justify-center gap-3 bg-white text-black font-bold rounded-2xl py-3 px-4 disabled:opacity-50 hover:brightness-95 transition"
         >
           <GoogleIcon />
-          {googleLoading ? "Redirecting..." : "Continue with Google"}
+          {loading ? "Redirecting..." : "Continue with Google"}
         </button>
-
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-duo-border" />
-          <span className="text-xs uppercase tracking-wider text-duo-gray">or</span>
-          <div className="flex-1 h-px bg-duo-border" />
-        </div>
-
-        {status === "sent" ? (
-          <div className="text-center space-y-2">
-            <div className="text-4xl">📬</div>
-            <p>Check <span className="font-semibold">{email}</span> for the link.</p>
-          </div>
-        ) : (
-          <form onSubmit={onSubmit} className="space-y-4">
-            <input
-              type="email"
-              required
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-duo-bg border border-duo-border rounded-2xl px-4 py-3 outline-none focus:border-duo-green"
-            />
-            <button
-              type="submit"
-              disabled={status === "sending"}
-              className="btn-primary w-full disabled:opacity-50"
-            >
-              {status === "sending" ? "Sending..." : "Send magic link"}
-            </button>
-          </form>
-        )}
 
         {error && <p className="text-duo-red text-sm text-center">{error}</p>}
 
