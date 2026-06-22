@@ -13,7 +13,7 @@ export default async function LeaderboardPage() {
     .from("leaderboard_weekly")
     .select("*")
     .order("week_xp", { ascending: false })
-    .limit(50);
+    .limit(3);
 
   const me = u.user.id;
 
@@ -24,7 +24,7 @@ export default async function LeaderboardPage() {
         <header>
           <h1 className="text-2xl font-extrabold">Weekly League</h1>
           <p className="text-duo-gray text-sm">
-            Top XP earners this week. Resets every Monday UTC.
+            Top 3 XP earners this week. Resets every Monday UTC.
           </p>
         </header>
         <ol className="space-y-2">
