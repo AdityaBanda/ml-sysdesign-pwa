@@ -1,12 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ExternalLink, Copy, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { detectInAppBrowser } from "@/lib/inAppBrowser";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [inAppName, setInAppName] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setInAppName(detectInAppBrowser(navigator.userAgent));
+  }, []);
 
   async function signInWithGoogle() {
     setLoading(true);
@@ -25,6 +33,16 @@ export default function LoginPage() {
     }
   }
 
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore
+    }
+  }
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 py-10">
       <div className="card max-w-md w-full p-8 space-y-6">
@@ -36,15 +54,19 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={signInWithGoogle}
-          disabled={loading}
-          className="w-full inline-flex items-center justify-center gap-3 bg-white text-black font-bold rounded-2xl py-3 px-4 disabled:opacity-50 hover:brightness-95 transition"
-        >
-          <GoogleIcon />
-          {loading ? "Redirecting..." : "Continue with Google"}
-        </button>
+        {inAppName ? (
+          <InAppBrowserNotice appName={inAppName} onCopy={copyLink} copied={copied} />
+        ) : (
+          <button
+            type="button"
+            onClick={signInWithGoogle}
+            disabled={loading}
+            className="w-full inline-flex items-center justify-center gap-3 bg-white text-black font-bold rounded-2xl py-3 px-4 disabled:opacity-50 hover:brightness-95 transition"
+          >
+            <GoogleIcon />
+            {loading ? "Redirecting..." : "Continue with Google"}
+          </button>
+        )}
 
         {error && <p className="text-duo-red text-sm text-center">{error}</p>}
 
@@ -55,6 +77,64 @@ export default function LoginPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+function InAppBrowserNotice({
+  appName,
+  onCopy,
+  copied,
+}: {
+  appName: string;
+  onCopy: () => void;
+  copied: boolean;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl border-2 border-duo-gold bg-duo-gold/10 p-4 space-y-2">
+        <div className="flex items-start gap-2">
+          <ExternalLink className="w-5 h-5 text-duo-gold shrink-0 mt-0.5" />
+          <div>
+            <p className="font-extrabold">Open in your browser to sign in</p>
+            <p className="text-sm text-white/85 mt-1">
+              You&apos;re viewing this inside <strong>{appName}</strong>&apos;s in-app browser.
+              Google blocks sign-in here for security. Open this page in Safari or
+              Chrome and tap &quot;Continue with Google&quot;.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-2 text-sm text-duo-gray">
+        <p className="font-bold text-white">How to open in your browser:</p>
+        <ul className="space-y-1 list-disc list-inside">
+          <li>
+            <span className="text-white">iPhone:</span> tap the <strong>⋯</strong> or share icon → <strong>Open in Safari</strong>
+          </li>
+          <li>
+            <span className="text-white">Android:</span> tap the <strong>⋮</strong> menu → <strong>Open in Chrome</strong> / external browser
+          </li>
+        </ul>
+      </div>
+
+      <button
+        type="button"
+        onClick={onCopy}
+        className="btn-ghost w-full inline-flex items-center justify-center gap-2"
+      >
+        {copied ? (
+          <>
+            <Check className="w-4 h-4 text-duo-green" />
+            Link copied
+          </>
+        ) : (
+          <>
+            <Copy className="w-4 h-4" />
+            Copy link
+          </>
+        )}
+      </button>
+    </div>
   );
 }
 
